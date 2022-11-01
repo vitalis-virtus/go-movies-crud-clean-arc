@@ -8,23 +8,23 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/vitalis-virtus/go-movies-gallery/internal/entity"
-	"github.com/vitalis-virtus/go-movies-gallery/internal/service"
+	"github.com/vitalis-virtus/go-movies-gallery/models"
+	"github.com/vitalis-virtus/go-movies-gallery/movie"
 	"github.com/vitalis-virtus/go-movies-gallery/pkg/utils"
 )
 
 type MovieHandler struct {
-	movieService service.IMovieService
+	useCase movie.MovieUseCase
 }
 
-func NewMovieHandler(movieService service.IMovieService) *MovieHandler {
+func NewMovieHandler(useCase movie.MovieUseCase) *MovieHandler {
 	return &MovieHandler{
-		movieService: movieService,
+		useCase: useCase,
 	}
 }
 
 func (h *MovieHandler) GetAllMovie(w http.ResponseWriter, r *http.Request) {
-	newMovies := h.movieService.GetAllMovie()
+	newMovies := h.useCase.GetAllMovie()
 	res, _ := json.Marshal(newMovies)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -32,12 +32,12 @@ func (h *MovieHandler) GetAllMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
-	newMovie := &entity.Movie{}
+	newMovie := &models.Movie{}
 
 	// we parse movie data from request in understandable form for go
 	utils.ParseBody(r, newMovie)
 
-	m, err := h.movieService.CreateMovie(newMovie)
+	m, err := h.useCase.CreateMovie(newMovie)
 
 	if err != nil {
 		log.Print(err)
@@ -57,7 +57,7 @@ func (h *MovieHandler) GetMovieById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error while parsing")
 	}
-	movieDetails, _ := h.movieService.GetMovieById(ID)
+	movieDetails, _ := h.useCase.GetMovieById(ID)
 
 	res, _ := json.Marshal(movieDetails)
 	w.Header().Set("Content-Type", "application/json")
@@ -72,7 +72,7 @@ func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error while parsing")
 	}
-	deletedMovie, err := h.movieService.DeleteMovie(ID)
+	deletedMovie, err := h.useCase.DeleteMovie(ID)
 
 	if err != nil {
 		log.Print(err)
@@ -86,7 +86,7 @@ func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
-	var updateMovie = &entity.Movie{}
+	var updateMovie = &models.Movie{}
 	utils.ParseBody(r, updateMovie)
 	vars := mux.Vars(r)
 	movieId := vars["movieId"]
@@ -95,7 +95,7 @@ func (h *MovieHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("error while parsing")
 	}
 
-	movieDetails, db := h.movieService.GetMovieById(ID)
+	movieDetails, db := h.useCase.GetMovieById(ID)
 
 	if err != nil {
 		log.Print(err)

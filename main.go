@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/vitalis-virtus/go-movies-gallery/api"
 	"github.com/vitalis-virtus/go-movies-gallery/pkg/database"
+	"github.com/vitalis-virtus/go-movies-gallery/server"
 	"log"
-	"net/http"
 )
 
 func main() {
@@ -17,8 +16,11 @@ func main() {
 
 	defer db.Close()
 
-	router := api.SetupRouter(db)
-	http.Handle("/", router)
+	app := server.NewApp(db)
+
 	fmt.Println("Starting server on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+
+	if err := app.Run("8080"); err != nil {
+		log.Fatalf("%s", err.Error())
+	}
 }
